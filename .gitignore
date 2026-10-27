@@ -1,0 +1,26 @@
+# Course materials: a separate read-only clone, updated with `git pull`
+LLM-Course-2026/
+
+# Environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.cache/
+
+# IDE and local tooling
+.idea/
+.junie/
+.DS_Store
+
+# Large artefacts: not committed and not included in the submission ZIP
+data/
+runs/
+logs/
+tokenizers/
+checkpoints/
+*.bin
+*.safetensors
+*.pt
+*.ckpt

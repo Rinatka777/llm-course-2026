@@ -1,22 +1,25 @@
 # This is a planning aid, not an intermediate submission.
 task:
-  name: ""
-  input: ""
-  desired_output: ""
-  primary_metric: ""
+  name: "English extractive question answering (TyDi QA GoldP, English subset)"
+  input: "A question and a Wikipedia passage"
+  desired_output: "A short answer span copied from the passage"
+  primary_metric: "token-level F1 (SQuAD-style), with exact match as a secondary metric"
 
 models:
-  base_model: ""
-  instruct_model: ""
-  reason_for_choice: ""
+  base_model: "Qwen/Qwen3.5-2B-Base"
+  instruct_model: "Qwen/Qwen3.5-2B"
+  reason_for_choice: >-
+    Has matching base and instruct versions, fits comfortably on one GH200,
+    Apache 2.0 licence, and is the model family used by the course lab
+    pipelines. Qwen/Qwen3.5-0.8B(-Base) is used for fast debugging runs.
 
 data:
-  training_or_prompt_development_set: ""
-  validation_set: ""
-  held_out_test_set: ""
-  licence: ""
+  training_or_prompt_development_set: "TyDi QA GoldP English train split (3,696 examples), minus the validation examples below"
+  validation_set: "400 examples held out from the TyDi QA GoldP English train split with seed 1234"
+  held_out_test_set: "TyDi QA GoldP English official validation split (440 examples)"
+  licence: "TyDi QA: Apache 2.0; Qwen3.5: Apache 2.0"
 
 reproducibility:
   random_seed: 1234
   environment_file: requirements.txt
-  notes: ""
+  notes: "Dataset: google-research-datasets/tydiqa, config secondary_task, ids starting with 'english'."

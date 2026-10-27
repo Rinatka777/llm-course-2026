@@ -7,9 +7,9 @@ Course materials: [Helsinki-NLP/LLM-Course-2026](https://github.com/Helsinki-NLP
 
 ## Project
 
-- **Task:** TBD
-- **Model:** TBD
-- **Held-out set:** TBD
+- **Task:** English extractive question answering (TyDi QA GoldP, English)
+- **Model:** Qwen3.5 2B (base and instruct)
+- **Held-out set:** TyDi QA GoldP English validation split (440 examples)
 
 See [`project-plan.yaml`](project-plan.yaml).
 

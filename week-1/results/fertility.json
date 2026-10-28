@@ -1,0 +1,137 @@
+[
+  {
+    "tokenizer": "BPE-8k",
+    "language": "English",
+    "sentences": 1012,
+    "words": 21901,
+    "tokens": 56755,
+    "tokens_per_word": 2.5914341810876214,
+    "median_sentence_fertility": 2.588235294117647
+  },
+  {
+    "tokenizer": "BPE-8k",
+    "language": "Finnish",
+    "sentences": 1012,
+    "words": 15985,
+    "tokens": 37327,
+    "tokens_per_word": 2.335126681263685,
+    "median_sentence_fertility": 2.3333333333333335
+  },
+  {
+    "tokenizer": "BPE-8k",
+    "language": "German",
+    "sentences": 1012,
+    "words": 21760,
+    "tokens": 70805,
+    "tokens_per_word": 3.25390625,
+    "median_sentence_fertility": 3.235294117647059
+  },
+  {
+    "tokenizer": "BPE-16k",
+    "language": "English",
+    "sentences": 1012,
+    "words": 21901,
+    "tokens": 51918,
+    "tokens_per_word": 2.370576685996073,
+    "median_sentence_fertility": 2.372685185185185
+  },
+  {
+    "tokenizer": "BPE-16k",
+    "language": "Finnish",
+    "sentences": 1012,
+    "words": 15985,
+    "tokens": 32967,
+    "tokens_per_word": 2.062370972786988,
+    "median_sentence_fertility": 2.0606617647058822
+  },
+  {
+    "tokenizer": "BPE-16k",
+    "language": "German",
+    "sentences": 1012,
+    "words": 21760,
+    "tokens": 64550,
+    "tokens_per_word": 2.966452205882353,
+    "median_sentence_fertility": 2.945195195195195
+  },
+  {
+    "tokenizer": "BPE-32k",
+    "language": "English",
+    "sentences": 1012,
+    "words": 21901,
+    "tokens": 47864,
+    "tokens_per_word": 2.185470983060134,
+    "median_sentence_fertility": 2.1889880952380953
+  },
+  {
+    "tokenizer": "BPE-32k",
+    "language": "Finnish",
+    "sentences": 1012,
+    "words": 15985,
+    "tokens": 29406,
+    "tokens_per_word": 1.8395996246481077,
+    "median_sentence_fertility": 1.8333333333333333
+  },
+  {
+    "tokenizer": "BPE-32k",
+    "language": "German",
+    "sentences": 1012,
+    "words": 21760,
+    "tokens": 59928,
+    "tokens_per_word": 2.7540441176470587,
+    "median_sentence_fertility": 2.736842105263158
+  },
+  {
+    "tokenizer": "Qwen/Qwen3.5-2B-Base",
+    "language": "English",
+    "sentences": 1012,
+    "words": 21901,
+    "tokens": 27530,
+    "tokens_per_word": 1.2570202273868774,
+    "median_sentence_fertility": 1.2142857142857142
+  },
+  {
+    "tokenizer": "Qwen/Qwen3.5-2B-Base",
+    "language": "Finnish",
+    "sentences": 1012,
+    "words": 15985,
+    "tokens": 45255,
+    "tokens_per_word": 2.831091648420394,
+    "median_sentence_fertility": 2.8333333333333335
+  },
+  {
+    "tokenizer": "Qwen/Qwen3.5-2B-Base",
+    "language": "German",
+    "sentences": 1012,
+    "words": 21760,
+    "tokens": 36164,
+    "tokens_per_word": 1.6619485294117646,
+    "median_sentence_fertility": 1.6428571428571428
+  },
+  {
+    "tokenizer": "google/gemma-4-E2B",
+    "language": "English",
+    "sentences": 1012,
+    "words": 21901,
+    "tokens": 27114,
+    "tokens_per_word": 1.2380256609287248,
+    "median_sentence_fertility": 1.1923076923076923
+  },
+  {
+    "tokenizer": "google/gemma-4-E2B",
+    "language": "Finnish",
+    "sentences": 1012,
+    "words": 15985,
+    "tokens": 45177,
+    "tokens_per_word": 2.8262120738192054,
+    "median_sentence_fertility": 2.8164983164983166
+  },
+  {
+    "tokenizer": "google/gemma-4-E2B",
+    "language": "German",
+    "sentences": 1012,
+    "words": 21760,
+    "tokens": 36020,
+    "tokens_per_word": 1.6553308823529411,
+    "median_sentence_fertility": 1.6470588235294117
+  }
+]

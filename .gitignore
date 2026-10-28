@@ -15,7 +15,8 @@ __pycache__/
 .DS_Store
 
 # Large artefacts: not committed and not included in the submission ZIP
-data/
+**/data/*
+!**/data/sample-*.txt
 runs/
 logs/
 tokenizers/

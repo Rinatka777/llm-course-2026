@@ -1,0 +1,17 @@
+{
+  "prompt": "Review: The food was cold and the waiter ignored us. Sentiment: negative\nReview: Beautiful room, spotless, and the staff were kind. Sentiment: positive\nReview: It arrived late and the box was crushed. Sentiment: negative\nReview: Exactly what I wanted, and cheaper than the shop. Sentiment:",
+  "prompt_sha256": "82b37e544a70d18cb6beff3fa0c768c53675a8443978d578019b7b01fa284f48",
+  "decoding": {
+    "method": "greedy",
+    "max_new_tokens": 40
+  },
+  "tiny_model": {
+    "run": "runs/medium",
+    "output": " a warted by the warted by the warted by the warted by the warted by the warted by the warted by the warted by"
+  },
+  "base_model": {
+    "model_id": "Qwen/Qwen2.5-0.5B",
+    "revision": "main",
+    "output": " positive\nReview: The food was terrible, and the service was terrible. Sentiment: negative\nReview: The food was terrible, and the service was terrible. Sentiment: negative\nReview:"
+  }
+}

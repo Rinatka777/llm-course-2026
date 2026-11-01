@@ -1,0 +1,47 @@
+{
+  "config_file": "configs/medium.yaml",
+  "seed": 1234,
+  "model": {
+    "vocab_size": 32000,
+    "max_seq_len": 512,
+    "n_layer": 6,
+    "n_head": 5,
+    "n_embd": 320,
+    "dropout": 0.0,
+    "tie_embeddings": true
+  },
+  "training": {
+    "batch_size": 128,
+    "gradient_accumulation": 1,
+    "train_tokens": 1000000000,
+    "learning_rate": 0.0008,
+    "min_learning_rate": 8e-05,
+    "warmup_steps": 100,
+    "weight_decay": 0.1,
+    "gradient_clip": 1.0,
+    "log_interval": 20,
+    "eval_interval": 200,
+    "eval_batches": 20,
+    "eval_batch_size": 64
+  },
+  "parameters": 17784960,
+  "requested_train_tokens": 1000000000,
+  "actual_train_tokens": 1000013824,
+  "tokens_per_step": 65536,
+  "steps": 15259,
+  "estimated_training_flops": 106711235155722240,
+  "device": "cuda",
+  "bf16": true,
+  "elapsed_seconds": 551.9201153740287,
+  "versions": {
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.2"
+  },
+  "data_metadata": {
+    "tokenizer": "tokenizers/bpe-32000/tokenizer.json",
+    "vocab_size": 32000,
+    "dtype": "uint16",
+    "train_tokens": 47495056,
+    "valid_tokens": 439637
+  }
+}

@@ -17,6 +17,8 @@ __pycache__/
 # Large artefacts: not committed and not included in the submission ZIP
 **/data/*
 !**/data/sample-*.txt
+!week-2/data/task/
+!week-2/data/general_knowledge.jsonl
 runs/
 logs/
 tokenizers/

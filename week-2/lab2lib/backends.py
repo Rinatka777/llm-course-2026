@@ -8,14 +8,16 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .common import project_path
+from .common import project_path, resolved_revision
 
 
 TOKEN_PATTERN = re.compile(r"[a-z]+")
 
 
 def tokens(record: dict[str, Any]) -> list[str]:
-    text = f"{record.get('premise', '')} {record.get('hypothesis', '')}".lower()
+    from .prompting import TASK_FIELDS
+
+    text = " ".join(str(record.get(field, "")) for field in TASK_FIELDS).lower()
     return TOKEN_PATTERN.findall(text)
 
 
@@ -71,6 +73,9 @@ class MockBackend:
             label = self._adapter_prediction(record)
         elif demos and (nearest := self._nearest_demo(record, demos)):
             label = nearest
+        elif "hypothesis" not in record or "premise" not in record:
+            # Non-NLI task: the mock simply predicts the first label.
+            label = self.labels[0]
         else:
             hypothesis = record["hypothesis"].lower()
             premise = record["premise"].lower()
@@ -127,7 +132,7 @@ class HuggingFaceBackend:
         model = AutoModelForCausalLM.from_pretrained(
             spec["id"],
             revision=spec["revision"],
-            torch_dtype=torch.bfloat16,
+            dtype=torch.bfloat16,
             device_map="auto",
             trust_remote_code=spec.get("trust_remote_code", False),
         )
@@ -137,7 +142,7 @@ class HuggingFaceBackend:
             model = PeftModel.from_pretrained(model, str(adapter_path))
         self.model = model.eval()
         base_config = getattr(model, "config", None)
-        self.resolved_revision = getattr(base_config, "_commit_hash", None)
+        self.resolved_revision = resolved_revision(spec["id"], spec["revision"], base_config)
         self.model_name = spec["id"]
 
     def _generate(self, user_prompt: str, system_prompt: str) -> str:

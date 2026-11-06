@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
 from .backends import fit_mock_adapter
 from .common import (
+    resolved_revision,
     load_split,
     output_dir,
     project_path,
@@ -15,6 +17,21 @@ from .common import (
     write_jsonl,
 )
 from .prompting import messages_for_sft
+
+
+def capped_intervals(settings: dict[str, Any], train_size: int) -> tuple[int, int]:
+    """Logging and evaluation intervals that fit within the training run.
+
+    With a small dataset the run can be shorter than the configured
+    intervals, so no loss would be recorded. Cap both at the number of
+    optimiser steps, so at least one training and one dev loss are logged.
+    """
+    batches = math.ceil(train_size / int(settings["per_device_train_batch_size"]))
+    per_epoch = max(1, batches // int(settings["gradient_accumulation_steps"]))
+    total = max(1, int(per_epoch * float(settings["num_train_epochs"])))
+    logging = max(1, min(int(settings["logging_steps"]), total))
+    evaluation = max(1, min(int(settings["eval_steps"]), total))
+    return logging, evaluation
 
 
 def _train_mock(config: dict[str, Any]) -> dict[str, Any]:
@@ -68,10 +85,10 @@ def _train_huggingface(config: dict[str, Any]) -> dict[str, Any]:
     model = AutoModelForCausalLM.from_pretrained(
         spec["id"],
         revision=spec["revision"],
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         trust_remote_code=spec.get("trust_remote_code", False),
     )
-    resolved_revision = getattr(model.config, "_commit_hash", None)
+    model_revision = resolved_revision(spec["id"], spec["revision"], model.config)
     train = Dataset.from_list(
         [{"messages": messages_for_sft(record)} for record in load_split(config, "train")]
     )
@@ -79,6 +96,7 @@ def _train_huggingface(config: dict[str, Any]) -> dict[str, Any]:
         [{"messages": messages_for_sft(record)} for record in load_split(config, "dev")]
     )
     settings = config["training"]
+    logging_steps, eval_steps = capped_intervals(settings, len(train))
     adapter_dir = project_path(settings["adapter_dir"], config)
     trainer_output = output_dir(config) / "checkpoints"
     peft_config = LoraConfig(
@@ -101,13 +119,14 @@ def _train_huggingface(config: dict[str, Any]) -> dict[str, Any]:
         gradient_accumulation_steps=int(settings["gradient_accumulation_steps"]),
         learning_rate=float(settings["learning_rate"]),
         lr_scheduler_type=settings["lr_scheduler_type"],
-        warmup_ratio=float(settings["warmup_ratio"]),
+        # A value below 1 is a fraction of the training steps (transformers >= 5.2).
+        warmup_steps=float(settings["warmup_ratio"]),
         num_train_epochs=float(settings["num_train_epochs"]),
-        logging_steps=int(settings["logging_steps"]),
+        logging_steps=logging_steps,
         eval_strategy="steps",
-        eval_steps=int(settings["eval_steps"]),
+        eval_steps=eval_steps,
         save_strategy="steps",
-        save_steps=int(settings["eval_steps"]),
+        save_steps=eval_steps,
         save_total_limit=2,
         seed=int(config["seed"]),
         data_seed=int(config["seed"]),
@@ -143,7 +162,7 @@ def _train_huggingface(config: dict[str, Any]) -> dict[str, Any]:
         "backend": "huggingface",
         "model_id": spec["id"],
         "requested_model_revision": spec["revision"],
-        "resolved_model_revision": resolved_revision,
+        "resolved_model_revision": model_revision,
         "adapter_dir": str(adapter_dir),
         "metrics": str(metrics_path.relative_to(output_dir(config))),
         "trainable_parameters": trainable,

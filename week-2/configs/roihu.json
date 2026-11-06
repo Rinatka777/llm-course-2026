@@ -1,33 +1,33 @@
 {
-  "experiment_name": "lab2-tydiqa-qwen3.5-2b",
+  "experiment_name": "lab2-roihu-qwen",
   "seed": 2026,
   "backend": "huggingface",
   "output_dir": "results/roihu",
   "task": {
-    "name": "tydiqa-goldp-english",
+    "name": "bundled-nli",
     "labels": ["entailment", "neutral", "contradiction"]
   },
   "data": {
-    "train": "data/tydiqa/train.jsonl",
-    "dev": "data/tydiqa/dev.jsonl",
-    "test": "data/tydiqa/test.jsonl",
+    "train": "data/task/train.jsonl",
+    "dev": "data/task/dev.jsonl",
+    "test": "data/task/test.jsonl",
     "knowledge": "data/general_knowledge.jsonl",
     "knowledge_limit": 50
   },
   "models": {
     "base": {
-      "id": "Qwen/Qwen3.5-2B-Base",
-      "revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c",
+      "id": "Qwen/Qwen3.5-0.8B-Base",
+      "revision": "main",
       "trust_remote_code": false
     },
     "instruct": {
-      "id": "Qwen/Qwen3.5-2B",
-      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "id": "Qwen/Qwen3.5-0.8B",
+      "revision": "main",
       "trust_remote_code": false
     },
     "sft": {
-      "id": "Qwen/Qwen3.5-2B",
-      "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "id": "Qwen/Qwen3.5-0.8B",
+      "revision": "main",
       "trust_remote_code": false
     }
   },

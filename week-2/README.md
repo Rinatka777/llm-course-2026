@@ -1,230 +1,236 @@
-# Lab 2 reference: prompting versus LoRA
+# Lab 2: does fine-tuning beat your best prompt?
 
-This directory is a complete, readable example of one controlled comparison:
+You compare **prompting** (instructions and examples, model unchanged) with
+**fine-tuning** (training the model on your labelled data). Both are scored on
+the same test set. You also check whether fine-tuning made the model worse at
+general knowledge.
 
-1. run zero-shot and few-shot prompts on matching base and instruct models;
-2. choose the strongest of those four on the development split;
-3. train an instruct model with bf16 LoRA supervised fine-tuning (SFT);
-4. score every method on the same held-out test split with the same parser and
-   exact-match metric;
-5. compare general-knowledge accuracy before and after SFT; and
-6. save the results and a train/evaluation loss plot.
+Work through the steps in order. Run every command from the `Week-2/Lab-2`
+directory, in an **SSH session on the GPU side of Roihu**
+(`ssh USERNAME@roihu-gpu.csc.fi`). The browser Jupyter terminal runs on a
+different kind of machine (x86), and jobs or packages set up there do not work
+on the GPUs. Details are in [REFERENCE.md](REFERENCE.md); you do not need them
+to complete the lab.
 
-The bundled task is a tiny three-way natural-language inference example. It is
-useful for checking code, but far too small for a scientific conclusion.
-Replace its JSONL files with your task data once the pipeline works. Keeping the
-same task or model in later course work can make comparisons easier, but it is
-optional.
+You do not have to finish in the lab session: you can continue on your own
+time. The course project on Roihu (`project_2021893`, the same as in Lab 1)
+can be used at any time during the course.
 
-Lab 2 is not an intermediate submission. Keep the code, results and analysis
-for the post-training section of the final report.
+You need access to Roihu (see the [course README](../../README.md#roihu-access))
+and a **classification task**: each example has some text and one label from
+a fixed set, such as positive / negative. You do not need to create a
+dataset: an existing labelled dataset is enough (step 5).
 
-## Use data from your selected task
+## What you need to do
 
-The bundled NLI files are only a runnable example. For the real lab, replace
-them with data from the task you selected for your project, or another suitable
-labelled task if you decide to change direction.
+**Minimum (enough for the report):** steps 1–11 once, with your own task and
+the default settings. That gives you the results table, the loss plot and a
+short discussion.
 
-Prepare three separate files:
+**If you want to go further** (pick any, after the minimum):
 
-- **train:** examples used for few-shot demonstrations and LoRA training;
-- **dev:** examples used to compare prompts and choose training settings; and
-- **test:** held-out examples used only after the prompt and training protocol
-  have been fixed.
+- tune the learning rate, epochs or LoRA rank, one at a time ([REFERENCE.md](REFERENCE.md#tuning));
+- improve the prompt further with `try_prompt.py`: other instructions, or more few-shot examples (`prompting.few_shot_count` in the config);
+- analyse the errors: which labels are confused, and what the wrong examples have in common;
+- try a larger base and instruct pair from the same model family;
+- compare languages, for example the same task in English and Finnish;
+- adapt the scorer to a task that is not classification ([REFERENCE.md](REFERENCE.md#tasks-that-are-not-classification));
+- try DPO or GRPO ([REFERENCE.md](REFERENCE.md#optional-extensions)).
 
-Give every example a stable ID and verify that the three splits do not overlap.
-Keep the test labels out of prompt development and hyperparameter choices. If
-the original dataset has no official development split, make one from the
-training data with a fixed seed and record how it was created.
+## 1. Get the files
 
-You must adapt four task-specific parts of the example:
+```bash
+cd ~
+git clone https://github.com/Helsinki-NLP/LLM-Course-2026.git   # first time only
+cd ~/LLM-Course-2026 && git pull                                  # later updates
+cd ~/LLM-Course-2026/Week-2/Lab-2
+```
 
-1. the JSONL fields and labels;
-2. the task instruction and few-shot format in `lab2lib/prompting.py`;
-3. the function that extracts a prediction from the model output; and
-4. the metric used to compare the prediction with the reference answer.
+## 2. Run the smoke test
 
-Use the same output contract, extraction function and metric for every
-prompting and fine-tuning condition. Run several examples by hand before the
-full experiment: print the rendered prompt, raw model output, extracted
-prediction and reference answer. This catches data and parser errors that an
-aggregate score can hide.
-
-## The two execution paths
-
-`configs/smoke.json` uses a deterministic heuristic backend, bundled data, and
-only the Python standard library. It does not import PyTorch, contact Hugging
-Face, download a model, or require a GPU. Its synthetic loss values and scores
-are pipeline checks, not model results.
-
-`configs/roihu.json` uses Hugging Face Transformers for generation and
-TRL/PEFT for real bf16 LoRA training. Both paths call the same prompt builders,
-answer extractors, held-out scorer, result writer, and plotting entry point.
-
-## Run the local smoke test
-
-From this directory:
+Checks the scripts with a fake model. No GPU needed.
 
 ```bash
 bash run_smoke_test.sh
 ```
 
-The command runs all four baselines, mock SFT, the before/after knowledge
-check, loss plotting, and artifact validation. It writes to `results/smoke/`.
-Running it again with the same files and seed gives the same predictions and
-scores. This test is safe to run on a login node because it does not use a GPU
-or download a model.
+✓ The last line is `Local smoke test completed.` The scores are meaningless.
 
-## Set up the real environment
-
-For a machine where pip should install PyTorch:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-```
-
-On Roihu, load the course PyTorch module and install the dependency list that
-does not contain PyTorch:
+## 3. Install the packages (once)
 
 ```bash
 module purge
 module load python-pytorch/2.13
 python3 -m pip install --user -r requirements-roihu.txt
+echo 'export HF_HOME=/scratch/project_2021893/$USER/hf' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-## Inspect and adapt the data
+The last two lines store downloaded models and datasets on scratch instead of
+in your home directory. Your results and fine-tuned models stay in
+`results/`.
 
-The task files use one JSON object per line:
-
-```json
-{"id":"train-001","premise":"A dog sleeps.","hypothesis":"An animal rests.","label":"entailment"}
-```
-
-The required splits are:
-
-- `train.jsonl`: SFT examples and the source of few-shot demonstrations;
-- `dev.jsonl`: prompt selection, evaluation loss and hyperparameter choices;
-- `test.jsonl`: one held-out set used by every reported task score.
-
-The scorer expects one of the labels listed in `task.labels` and extracts the
-shared `Label: <label>` output format. For another classification task, change
-the prompt text in `lab2lib/prompting.py`, the labels in the config, and your
-JSONL fields. Keep one extraction function for all five task conditions.
-
-`data/general_knowledge.jsonl` contains 50 unrelated multiple-choice questions.
-The check is a regression test: the useful number is the after-minus-before
-change, not the standalone benchmark score. Fifty binary observations are
-noisy, so do not over-interpret a small difference.
-
-## Configure models and reproducibility
-
-Edit `configs/roihu.json` before a real run:
-
-- choose matching base and instruct model IDs;
-- choose the instruct checkpoint under `models.sft`;
-- replace each `revision: "main"` with a Hugging Face commit hash when
-  possible;
-- point the split paths at your data;
-- adjust `max_new_tokens` for your output format;
-- choose an output and adapter directory.
-
-The example records the requested revision and the resolved Hub commit exposed
-by Transformers. It also stores the seed, split sizes, complete decoding
-settings, training settings, prompts, raw generations, extracted predictions,
-and config hash. Greedy decoding is fixed globally: `temperature=0`,
-`do_sample=false`, and `num_beams=1`.
-
-The supplied SFT settings are bf16, assistant-only loss, rank 16, alpha 32,
-dropout 0.05, all linear layers, cosine scheduling, 3% warmup, and an effective
-batch size of 16. TRL requires a chat template that can identify assistant
-tokens for `assistant_only_loss=True`. If your model's template lacks that
-support, choose a compatible instruct model or provide a correct template;
-silently training on prompt tokens changes the experiment.
-
-## Run on Roihu
-
-Submit GPU jobs from the Roihu login node; Slurm starts the work on a compute
-node. Do not run model evaluation or training directly on the login node.
-The supplied script already requests one GH200 with
-`--gres=gpu:gh200:1`. Create the log directory and first use its short
-`gputest` configuration:
+## 4. Run the example on a GPU
 
 ```bash
 mkdir -p logs
 sbatch slurm/lab2.slurm configs/roihu.json
 ```
 
-After that short run is healthy, submit the real experiment with a longer
-allocation. Command-line options override the short defaults in the script:
+Note the job number that `sbatch` prints. Then:
 
 ```bash
-sbatch --partition=gpumedium --time=02:00:00 \
-  slurm/lab2.slurm configs/roihu.json
+squeue --me                          # PD = waiting, R = running, gone = finished
+tail -f logs/lab2-lora-JOBID.out     # follow the output, Ctrl+C to stop
+python3 summarize_results.py --config configs/roihu.json   # when finished
 ```
 
-The one-command runner executes:
+✓ The log shows stages `1/6` to `6/6` and the table prints. The example data
+is tiny, so the scores mean nothing.
+
+## 5. Get your data
+
+You do **not** create a dataset. You take an existing labelled dataset and
+split it into three files: **train** (to learn from), **dev** (to choose the
+prompt and settings) and **test** (only for the final scores).
+
+**Option A — no data of your own yet:** use SST-2, film reviews labelled
+positive or negative.
 
 ```bash
-python3 run_experiment.py --config configs/roihu.json --fresh
+module load python-pytorch/2.13      # needed once per terminal
+python3 from_huggingface.py --dataset stanfordnlp/sst2 --out sst2.jsonl
+python3 make_splits.py --input sst2.jsonl --fields sentence --label-field label --out data/my-task
 ```
 
-Model loading is repeated between phases to keep each evaluator independent.
-That is simple and auditable, though not the fastest possible implementation.
-For a large held-out set, separate the phases or cache already downloaded model
-files.
+This makes 2,000 train, 300 dev and 500 test examples. Change the sizes with
+`--train`, `--dev` and `--test`.
 
-Each phase is also available on its own, which is helpful while debugging:
+Other tested datasets work the same way. Change the two commands and the
+`TASK_FIELDS` setting in step 6:
+
+| Task | `--dataset` | `--fields` and `TASK_FIELDS` | Labels |
+|---|---|---|---|
+| film review sentiment | `stanfordnlp/sst2` | `sentence` | negative, positive |
+| emotion in tweets | `dair-ai/emotion` | `text` | sadness, joy, love, anger, fear, surprise |
+| news topic | `fancyzhx/ag_news` | `text` | World, Sports, Business, Sci/Tech |
+| inference (two sentences) | `nyu-mll/glue --config rte` | `sentence1 sentence2` | entailment, not_entailment |
+
+For RTE, write `TASK_FIELDS = ("sentence1", "sentence2")` and use
+`--train 1500 --dev 300 --test 500`, because the dataset is small.
+
+**Option B — your own labelled file** (CSV, TSV or JSONL, for example from
+your project): name the text column(s) and the label column.
 
 ```bash
-python3 evaluate.py --config configs/roihu.json --target baselines
-python3 evaluate.py --config configs/roihu.json --target forgetting-before
-python3 sft_lora.py --config configs/roihu.json
-python3 evaluate.py --config configs/roihu.json --target sft
-python3 evaluate.py --config configs/roihu.json --target forgetting-after
-python3 plot_losses.py --config configs/roihu.json
+python3 make_splits.py --input mydata.csv --fields text --label-field label --out data/my-task
 ```
 
-Run the phases in that order. The individual commands update one shared
-`results.json`; the one-command runner initializes it automatically.
+✓ `make_splits.py` prints the number of examples and the labels it found.
+Labels should be words (`positive`), not numbers (`1`).
 
-## Outputs
+## 6. Adapt the prompt
 
-An experiment directory contains:
+Open `lab2lib/prompting.py` and change the two settings at the top:
 
-- `results.json`: machine-readable configuration, provenance, all scores, the
-  selected best prompt (chosen on development data), test scores, forgetting
-  delta, and artifact paths;
-- `predictions/*.jsonl`: IDs, prompts, raw generations, extracted answers,
-  gold labels, and correctness for every condition;
-- `training_metrics.jsonl`: step-level train and evaluation losses;
-- `loss.png` (real path) or `loss.svg` (smoke path): both losses on one plot;
-- `adapter/`: PEFT adapter weights and tokenizer files.
+```python
+TASK_FIELDS = ("sentence",)    # your text column(s); keep the comma for one column
+TASK_SYSTEM = (
+    "Is the review positive or negative? "
+    "Use exactly one of: positive, negative. "
+    "End with 'Label: <label>'."   # keep this sentence: the scorer needs it
+)
+```
 
-Read a sample of raw generations before trusting a score. A score of exactly
-zero or one often indicates an extraction or prompt-format problem. Base
-models receive plain completion prompts; only instruct models use their own
-chat template.
+## 7. Make your config and check everything
 
-## Completion checklist
+```bash
+cp configs/roihu.json configs/my-task.json
+```
 
-For the final report, keep:
+In `configs/my-task.json`, change:
 
-- the adapted train, development and held-out test splits;
-- the exact configuration and task-specific prompting and scoring code;
-- `results.json`, prediction files and the loss plot;
-- a comparison of the prompting and LoRA results; and
-- a short discussion of general-knowledge change and experimental limitations.
+| Entry | Example |
+|---|---|
+| `experiment_name` | `"my-task"` |
+| `output_dir` | `"results/my-task"` |
+| `training.adapter_dir` | `"results/my-task/adapter"` |
+| `task.labels` | `["positive", "negative"]` |
+| `data.train`, `data.dev`, `data.test` | `"data/my-task/train.jsonl"` and so on |
 
-## What the comparison does and does not establish
+Then check the data and read one prompt, still without a GPU:
 
-The shared test set, decoding settings, and parser make the five task scores
-directly comparable. The few-shot examples are sampled deterministically from
-training data, never from the test set. The general-knowledge questions are
-also identical before and after SFT.
+```bash
+python3 check_data.py --config configs/my-task.json
+python3 run_experiment.py --config configs/my-task.json --mock --fresh > /dev/null
+python3 show_examples.py --config configs/my-task.json --run instruct-5-shot --n 1 --prompt
+```
 
-The example does not remove possible benchmark contamination from model
-pretraining, estimate uncertainty for a tiny task fixture, or prove that one
-hyperparameter setting is optimal. A useful analysis reports these limits,
-the GPU and human effort, and whether any score change justified the SFT run.
+✓ `check_data.py` ends with `No errors found.` and the prompt looks right.
+
+## 8. Try prompts (interactive GPU)
+
+Find a good instruction before the full run. Start an interactive GPU session
+(15 minutes), then try your prompt on 50 dev examples:
+
+```bash
+srun --account=project_2021893 --partition=gpuinteractive --gres=gpu:gh200:1 --time=00:15:00 --pty bash
+module load python-pytorch/2.13
+python3 try_prompt.py --config configs/my-task.json          # instruct, 5 examples
+python3 try_prompt.py --config configs/my-task.json --all    # all four prompts
+exit                                                         # free the GPU when done
+```
+
+Edit `TASK_SYSTEM` in `lab2lib/prompting.py` and run `try_prompt.py` again.
+Two or three tries are enough. The test set is not used, and every try is
+logged in `results/my-task-prompt-trials/log.jsonl` for your report.
+
+✓ A table of dev accuracy and some wrong answers.
+
+## 9. Run your experiment
+
+```bash
+sbatch --partition=gpumedium --time=02:00:00 slurm/lab2.slurm configs/my-task.json
+```
+
+Follow it as in step 4. It can take an hour or more, so submit it by
+minute 60 of the session. **Do not edit `prompting.py` or the config until
+the job has finished**: the job reads them when it starts, which may be later
+than you submit.
+
+## 10. Read the results
+
+```bash
+python3 summarize_results.py --config configs/my-task.json
+python3 show_examples.py --config configs/my-task.json --run lora-sft --wrong
+```
+
+- Compare **the baseline selected on dev** with **LoRA SFT** on the test set.
+- Read some raw outputs. A score of exactly 0 or 100, or many
+  `prediction=None`, means the scorer or prompt needs fixing.
+- Open `results/my-task/loss.png`. If the training loss falls while the dev
+  loss rises, try fewer epochs.
+
+## 11. Keep for the final report
+
+- the table from `summarize_results.py`, with dataset, split sizes and models;
+- `configs/my-task.json`, `lab2lib/prompting.py`, and the `results/my-task/` and
+  `results/my-task-prompt-trials/` folders;
+- a short discussion: did fine-tuning beat the best prompt, at what cost, and
+  what happened to general knowledge? A negative result is a valid result.
+
+## If something goes wrong
+
+| Problem | Fix |
+|---|---|
+| no log file | `mkdir -p logs`, then submit again |
+| job waits as `PD` for long | `squeue --me --start` shows the estimated start |
+| job stops at the time limit | longer `--time`, or smaller dev and test sets |
+| `ModuleNotFoundError` | repeat step 3 (in an interactive session: `module load python-pytorch/2.13`) |
+| `execve(): python3: No such file or directory`, or import errors after using Jupyter | you submitted or installed from the x86 side: use `ssh USERNAME@roihu-gpu.csc.fi`, repeat step 3 with `--force-reinstall`, and submit again |
+| `KeyError` with a field name | `TASK_FIELDS` does not match your data; run `check_data.py` |
+| `CUDA out of memory` | in the config, halve `per_device_train_batch_size` and double `gradient_accumulation_steps` |
+| scores of 0 or 100, many `None` | read outputs with `show_examples.py` and check the labels |
+| warnings about `flash-linear-attention` or `causal_conv1d` | harmless: the model runs correctly, only more slowly |
+
+Stuck for more than ten minutes? Ask.

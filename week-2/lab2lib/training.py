@@ -40,7 +40,7 @@ def _train_mock(config: dict[str, Any]) -> dict[str, Any]:
     adapter_dir.mkdir(parents=True, exist_ok=True)
     write_json(
         adapter_dir / "mock_adapter.json",
-        fit_mock_adapter(train, config["task"]["labels"]),
+        fit_mock_adapter(train, config["task"].get("labels", [])),
     )
     metrics = [
         {"step": 1, "epoch": 0.25, "loss": 1.20},

@@ -36,14 +36,21 @@ def main() -> None:
     print(f"Base model: {models['base']['id']} ({models['base']['revision']})  ")
     print(f"Instruct model: {models['instruct']['id']} ({models['instruct']['revision']})\n")
 
-    print("| Setting | Dev | Test |")
-    print("|---|---:|---:|")
+    print("| Setting | Dev F1 | Dev EM | Test F1 | Test EM |")
+    print("|---|---:|---:|---:|---:|")
     for run in result.get("baselines", []):
         marker = " **(selected on dev)**" if run["name"] == best else ""
-        print(f"| {run['name']}{marker} | {pct(run.get('dev_score'))} | {pct(run['score'])} |")
+        print(
+            f"| {run['name']}{marker} | {pct(run.get('dev_score'))} | "
+            f"{pct(run.get('dev_exact_match'))} | {pct(run['score'])} | "
+            f"{pct(run.get('exact_match'))} |"
+        )
     sft = result.get("sft_evaluation")
     if sft:
-        print(f"| LoRA SFT (instruct + adapter, zero-shot) | – | {pct(sft['score'])} |")
+        print(
+            f"| LoRA SFT (instruct + adapter, zero-shot) | – | – | "
+            f"{pct(sft['score'])} | {pct(sft.get('exact_match'))} |"
+        )
 
     forgetting = result.get("forgetting", {})
     if forgetting:

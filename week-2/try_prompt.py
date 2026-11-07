@@ -23,7 +23,7 @@ import json
 from lab2lib import prompting
 from lab2lib.backends import make_backend
 from lab2lib.common import load_config, load_split, output_dir, write_jsonl
-from lab2lib.evaluation import select_demos
+from lab2lib.evaluation import gold_answers, score_answer, select_demos
 
 
 def run_condition(config, backend, model_key, shots, examples, demos):
@@ -31,13 +31,15 @@ def run_condition(config, backend, model_key, shots, examples, demos):
     for record in examples:
         prompt = prompting.task_prompt(record, demos if shots else [])
         raw = backend.generate_task(record, demos if shots else [], prompt)
-        prediction = prompting.extract_task_label(raw, config["task"]["labels"])
+        prediction = prompting.extract_task_label(raw, config["task"].get("labels"))
+        exact, f1 = score_answer(prediction, record)
         rows.append(
             {
                 "id": record["id"],
-                "gold": record["label"],
+                "gold": gold_answers(record),
                 "prediction": prediction,
-                "correct": prediction == record["label"],
+                "correct": exact,
+                "f1": f1,
                 "raw_output": raw,
                 "prompt": prompt,
             }
@@ -86,9 +88,10 @@ def main() -> None:
                 condition_demos = demos[:count]
                 rows = run_condition(config, backend, model_key, count, examples, condition_demos)
                 name = f"{model_key}-{'zero' if count == 0 else f'{count}-shot'}"
-                score = sum(row["correct"] for row in rows) / len(rows) if rows else 0.0
+                score = sum(row["f1"] for row in rows) / len(rows) if rows else 0.0
+                exact = sum(row["correct"] for row in rows) / len(rows) if rows else 0.0
                 missing = sum(row["prediction"] is None for row in rows)
-                summary.append((name, score, missing, rows))
+                summary.append((name, score, exact, missing, rows))
                 write_jsonl(trials_dir / f"{stamp}-{name}.jsonl", rows)
                 with (trials_dir / "log.jsonl").open("a", encoding="utf-8") as log:
                     log.write(
@@ -97,7 +100,8 @@ def main() -> None:
                                 "time": stamp,
                                 "condition": name,
                                 "dev_examples": len(rows),
-                                "dev_accuracy": score,
+                                "dev_f1": score,
+                                "dev_exact_match": exact,
                                 "no_label": missing,
                                 "instruction": prompting.TASK_SYSTEM,
                                 "backend": config["backend"],
@@ -109,12 +113,12 @@ def main() -> None:
         finally:
             backend.close()
 
-    print("\n| Condition | Dev accuracy | No label found |")
-    print("|---|---:|---:|")
-    for name, score, missing, _ in summary:
-        print(f"| {name} | {100 * score:.1f} | {missing} |")
+    print("\n| Condition | Dev F1 | Dev EM | No answer found |")
+    print("|---|---:|---:|---:|")
+    for name, score, exact, missing, _ in summary:
+        print(f"| {name} | {100 * score:.1f} | {100 * exact:.1f} | {missing} |")
 
-    name, _, _, rows = summary[-1]
+    name, _, _, _, rows = summary[-1]
     wrong = [row for row in rows if not row["correct"]][: args.show]
     if wrong:
         print(f"\nSome wrong answers from {name}:")

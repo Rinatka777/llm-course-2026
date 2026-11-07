@@ -40,8 +40,9 @@ def main() -> None:
         rows = [row for row in rows if not row["correct"]]
     for row in rows[: args.n]:
         mark = "correct" if row["correct"] else "WRONG"
+        f1 = f"  F1={row['f1']:.2f}" if "f1" in row else ""
         print("=" * 72)
-        print(f"{row['id']}  gold={row['gold']}  prediction={row['prediction']}  [{mark}]")
+        print(f"{row['id']}  gold={row['gold']}  prediction={row['prediction']}{f1}  [{mark}]")
         if args.prompt:
             print("--- prompt ---")
             print(row["prompt"])

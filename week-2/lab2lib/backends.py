@@ -69,6 +69,13 @@ class MockBackend:
         self, record: dict[str, Any], demos: list[dict[str, Any]], prompt: str
     ) -> str:
         del prompt
+        if not self.labels:
+            # QA task without fixed labels: answer with the first words of the
+            # first input field (the context), so the scorer gets a span.
+            from .prompting import TASK_FIELDS
+
+            span = " ".join(str(record[TASK_FIELDS[0]]).split()[:3])
+            return f"Reasoning omitted by mock backend. Answer: {span}"
         if self.adapter is not None:
             label = self._adapter_prediction(record)
         elif demos and (nearest := self._nearest_demo(record, demos)):
@@ -205,7 +212,7 @@ def make_backend(
     adapter_path = project_path(config["training"]["adapter_dir"], config) if adapter else None
     if config["backend"] == "mock":
         return MockBackend(
-            config["task"]["labels"],
+            config["task"].get("labels", []),
             model_name=f"mock-{model_key}",
             adapter_path=adapter_path,
         )

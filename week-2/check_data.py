@@ -28,7 +28,7 @@ def main() -> None:
     parser.add_argument("--config", required=True)
     args = parser.parse_args()
     config = load_config(args.config)
-    labels = config["task"]["labels"]
+    labels = config["task"].get("labels", [])
     few_shot = int(config["prompting"]["few_shot_count"])
 
     errors: list[str] = []
@@ -38,7 +38,7 @@ def main() -> None:
     texts: dict[str, set[str]] = {}
 
     print(f"Input fields (TASK_FIELDS in lab2lib/prompting.py): {', '.join(TASK_FIELDS)}")
-    print(f"Labels (task.labels in {args.config}): {', '.join(labels)}\n")
+    print(f"Labels (task.labels in {args.config}): {', '.join(labels) or 'none (free-text answers)'}\n")
 
     for name, records in splits.items():
         label_counts: Counter[str] = Counter()
@@ -48,10 +48,13 @@ def main() -> None:
             for field in ("id", "label", *TASK_FIELDS):
                 if field not in record or str(record[field]).strip() == "":
                     errors.append(f"{where}: missing or empty field '{field}'")
-            if "label" in record and record["label"] not in labels:
+            if labels and "label" in record and record["label"] not in labels:
                 errors.append(
                     f"{where}: label '{record['label']}' is not in task.labels"
                 )
+            if not labels and "label" in record and "context" in record:
+                if str(record["label"]) not in str(record["context"]):
+                    warnings.append(f"{where}: the answer does not occur in the context")
             if "id" in record:
                 identifier = str(record["id"])
                 if identifier in seen_ids:

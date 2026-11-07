@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import random
+import re
+import string
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -20,8 +23,49 @@ from .prompting import (
 )
 
 
+TASK_METRIC = "SQuAD token F1 (exact match also reported)"
+
+
 def accuracy(rows: list[dict[str, Any]]) -> float:
     return sum(row["correct"] for row in rows) / len(rows) if rows else 0.0
+
+
+def mean_f1(rows: list[dict[str, Any]]) -> float:
+    return sum(row["f1"] for row in rows) / len(rows) if rows else 0.0
+
+
+def normalize_answer(text: str) -> str:
+    """SQuAD normalisation: lower case, no punctuation, articles or extra spaces."""
+    text = text.lower()
+    text = "".join(char for char in text if char not in set(string.punctuation))
+    text = re.sub(r"\b(a|an|the)\b", " ", text)
+    return " ".join(text.split())
+
+
+def token_f1(prediction: str, gold: str) -> float:
+    predicted = normalize_answer(prediction).split()
+    reference = normalize_answer(gold).split()
+    common = Counter(predicted) & Counter(reference)
+    overlap = sum(common.values())
+    if overlap == 0:
+        return 0.0
+    precision = overlap / len(predicted)
+    recall = overlap / len(reference)
+    return 2 * precision * recall / (precision + recall)
+
+
+def gold_answers(record: dict[str, Any]) -> list[str]:
+    return list(record.get("answers") or [record["label"]])
+
+
+def score_answer(prediction: str | None, record: dict[str, Any]) -> tuple[bool, float]:
+    """Exact match and F1 against the best-matching gold answer."""
+    if prediction is None:
+        return False, 0.0
+    golds = gold_answers(record)
+    exact = any(normalize_answer(prediction) == normalize_answer(gold) for gold in golds)
+    f1 = max(token_f1(prediction, gold) for gold in golds)
+    return exact, f1
 
 
 def select_demos(
@@ -51,13 +95,15 @@ def score_task(
         for record in examples:
             prompt = task_prompt(record, demos)
             raw = backend.generate_task(record, demos, prompt)
-            prediction = extract_task_label(raw, config["task"]["labels"])
+            prediction = extract_task_label(raw, config["task"].get("labels"))
+            exact, f1 = score_answer(prediction, record)
             rows.append(
                 {
                     "id": record["id"],
-                    "gold": record["label"],
+                    "gold": gold_answers(record),
                     "prediction": prediction,
-                    "correct": prediction == record["label"],
+                    "correct": exact,
+                    "f1": f1,
                     "raw_output": raw,
                     "prompt": prompt,
                 }
@@ -72,10 +118,11 @@ def score_task(
         "model_kind": model_key,
         "shots": shots,
         "split": split,
-        "score": accuracy(rows),
+        "score": mean_f1(rows),
+        "exact_match": accuracy(rows),
         "correct": sum(row["correct"] for row in rows),
         "total": len(rows),
-        "metric": "exact-match accuracy",
+        "metric": TASK_METRIC,
         "model": metadata,
         "predictions": str(path.relative_to(output_dir(config))),
     }
@@ -109,6 +156,7 @@ def evaluate_baselines(config: dict[str, Any]) -> list[dict[str, Any]]:
             split="test",
         )
         run["dev_score"] = candidate["score"]
+        run["dev_exact_match"] = candidate["exact_match"]
         run["dev_predictions"] = candidate["predictions"]
         runs.append(run)
     selected_test = next(
@@ -124,7 +172,7 @@ def evaluate_baselines(config: dict[str, Any]) -> list[dict[str, Any]]:
                 "name": selected_test["name"],
                 "dev_score": best["score"],
                 "test_score": selected_test["score"],
-                "selection_rule": "highest dev exact-match accuracy; name breaks ties",
+                "selection_rule": "highest dev F1; name breaks ties",
             },
         },
     )

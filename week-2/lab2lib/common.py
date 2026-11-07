@@ -141,8 +141,8 @@ def initialize_results(config: dict[str, Any]) -> dict[str, Any]:
         },
         "data": {
             "splits": splits,
-            "metric": "exact-match accuracy",
-            "labels": config["task"]["labels"],
+            "metric": "SQuAD token F1 (exact match also reported)",
+            "labels": config["task"].get("labels", []),
         },
         "config": public_config,
         "baselines": [],

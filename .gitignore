@@ -27,3 +27,5 @@ checkpoints/
 *.safetensors
 *.pt
 *.ckpt
+!week-2/data/tydiqa/
+!week-2/data/tydiqa-sample/

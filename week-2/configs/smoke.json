@@ -4,20 +4,28 @@
   "backend": "mock",
   "output_dir": "results/smoke",
   "task": {
-    "name": "bundled-nli",
-    "labels": ["entailment", "neutral", "contradiction"]
+    "name": "tydiqa-goldp-english-sample"
   },
   "data": {
-    "train": "data/task/train.jsonl",
-    "dev": "data/task/dev.jsonl",
-    "test": "data/task/test.jsonl",
+    "train": "data/tydiqa-sample/train.jsonl",
+    "dev": "data/tydiqa-sample/dev.jsonl",
+    "test": "data/tydiqa-sample/test.jsonl",
     "knowledge": "data/general_knowledge.jsonl",
     "knowledge_limit": 8
   },
   "models": {
-    "base": {"id": "mock-base", "revision": "bundled-v1"},
-    "instruct": {"id": "mock-instruct", "revision": "bundled-v1"},
-    "sft": {"id": "mock-instruct", "revision": "bundled-v1"}
+    "base": {
+      "id": "mock-base",
+      "revision": "bundled-v1"
+    },
+    "instruct": {
+      "id": "mock-instruct",
+      "revision": "bundled-v1"
+    },
+    "sft": {
+      "id": "mock-instruct",
+      "revision": "bundled-v1"
+    }
   },
   "prompting": {
     "few_shot_count": 3

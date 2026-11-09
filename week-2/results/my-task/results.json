@@ -1,0 +1,254 @@
+{
+  "artifacts": {
+    "loss_plot": "loss.png"
+  },
+  "baselines": [
+    {
+      "correct": 232,
+      "dev_exact_match": 0.4925,
+      "dev_predictions": "predictions/dev-base-zero.jsonl",
+      "dev_score": 0.611641005622277,
+      "exact_match": 0.5272727272727272,
+      "metric": "SQuAD token F1 (exact match also reported)",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B-Base",
+        "requested_revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c",
+        "resolved_revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c"
+      },
+      "model_kind": "base",
+      "name": "base-zero",
+      "predictions": "predictions/base-zero.jsonl",
+      "score": 0.6286640078046377,
+      "shots": 0,
+      "split": "test",
+      "total": 440
+    },
+    {
+      "correct": 239,
+      "dev_exact_match": 0.4625,
+      "dev_predictions": "predictions/dev-base-5-shot.jsonl",
+      "dev_score": 0.583705639668432,
+      "exact_match": 0.5431818181818182,
+      "metric": "SQuAD token F1 (exact match also reported)",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B-Base",
+        "requested_revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c",
+        "resolved_revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c"
+      },
+      "model_kind": "base",
+      "name": "base-5-shot",
+      "predictions": "predictions/base-5-shot.jsonl",
+      "score": 0.6695336725749128,
+      "shots": 5,
+      "split": "test",
+      "total": 440
+    },
+    {
+      "correct": 268,
+      "dev_exact_match": 0.5775,
+      "dev_predictions": "predictions/dev-instruct-zero.jsonl",
+      "dev_score": 0.7244357294317386,
+      "exact_match": 0.6090909090909091,
+      "metric": "SQuAD token F1 (exact match also reported)",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B",
+        "requested_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "resolved_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc"
+      },
+      "model_kind": "instruct",
+      "name": "instruct-zero",
+      "predictions": "predictions/instruct-zero.jsonl",
+      "score": 0.7746793353258905,
+      "shots": 0,
+      "split": "test",
+      "total": 440
+    },
+    {
+      "correct": 283,
+      "dev_exact_match": 0.595,
+      "dev_predictions": "predictions/dev-instruct-5-shot.jsonl",
+      "dev_score": 0.7390864232186892,
+      "exact_match": 0.6431818181818182,
+      "metric": "SQuAD token F1 (exact match also reported)",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B",
+        "requested_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "resolved_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc"
+      },
+      "model_kind": "instruct",
+      "name": "instruct-5-shot",
+      "predictions": "predictions/instruct-5-shot.jsonl",
+      "score": 0.7701987450579696,
+      "shots": 5,
+      "split": "test",
+      "total": 440
+    }
+  ],
+  "best_prompt": {
+    "dev_score": 0.7390864232186892,
+    "name": "instruct-5-shot",
+    "selection_rule": "highest dev F1; name breaks ties",
+    "test_score": 0.7701987450579696
+  },
+  "config": {
+    "backend": "huggingface",
+    "data": {
+      "dev": "data/tydiqa/dev.jsonl",
+      "knowledge": "data/general_knowledge.jsonl",
+      "knowledge_limit": 50,
+      "test": "data/tydiqa/test.jsonl",
+      "train": "data/tydiqa/train.jsonl"
+    },
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 48,
+      "num_beams": 1,
+      "strategy": "greedy",
+      "temperature": 0
+    },
+    "experiment_name": "tydiqa-en-qwen3.5-2b",
+    "models": {
+      "base": {
+        "id": "Qwen/Qwen3.5-2B-Base",
+        "revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c",
+        "trust_remote_code": false
+      },
+      "instruct": {
+        "id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "trust_remote_code": false
+      },
+      "sft": {
+        "id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "trust_remote_code": false
+      }
+    },
+    "output_dir": "results/my-task",
+    "plot": {
+      "format": "png"
+    },
+    "prompting": {
+      "few_shot_count": 5
+    },
+    "seed": 2026,
+    "task": {
+      "name": "tydiqa-goldp-english"
+    },
+    "training": {
+      "adapter_dir": "results/my-task/adapter",
+      "eval_steps": 50,
+      "gradient_accumulation_steps": 2,
+      "learning_rate": 0.0002,
+      "logging_steps": 10,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05,
+      "lora_r": 16,
+      "lr_scheduler_type": "cosine",
+      "max_length": 1024,
+      "num_train_epochs": 2,
+      "per_device_eval_batch_size": 8,
+      "per_device_train_batch_size": 8,
+      "target_modules": "all-linear",
+      "warmup_ratio": 0.03
+    }
+  },
+  "config_sha256": "38dada7f343ef2b0db24ff5f095df4ad3b6ce0b93f97830f3fb7aafb731d00f4",
+  "data": {
+    "labels": [],
+    "metric": "SQuAD token F1 (exact match also reported)",
+    "splits": {
+      "dev": 400,
+      "knowledge": 50,
+      "test": 440,
+      "train": 3286
+    }
+  },
+  "experiment_name": "tydiqa-en-qwen3.5-2b",
+  "forgetting": {
+    "after": {
+      "correct": 40,
+      "metric": "exact-match accuracy",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B",
+        "requested_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "resolved_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc"
+      },
+      "predictions": "predictions/knowledge-after.jsonl",
+      "score": 0.8,
+      "total": 50
+    },
+    "before": {
+      "correct": 20,
+      "metric": "exact-match accuracy",
+      "model": {
+        "model_id": "Qwen/Qwen3.5-2B",
+        "requested_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "resolved_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc"
+      },
+      "predictions": "predictions/knowledge-before.jsonl",
+      "score": 0.4,
+      "total": 50
+    },
+    "delta": 0.4
+  },
+  "reproducibility": {
+    "backend": "huggingface",
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 48,
+      "num_beams": 1,
+      "strategy": "greedy",
+      "temperature": 0
+    },
+    "requested_models": {
+      "base": {
+        "id": "Qwen/Qwen3.5-2B-Base",
+        "revision": "b1485b2fa6dfa1287294f269f5fb618e03d52d7c",
+        "trust_remote_code": false
+      },
+      "instruct": {
+        "id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "trust_remote_code": false
+      },
+      "sft": {
+        "id": "Qwen/Qwen3.5-2B",
+        "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+        "trust_remote_code": false
+      }
+    },
+    "seed": 2026
+  },
+  "schema_version": 1,
+  "sft_evaluation": {
+    "correct": 327,
+    "exact_match": 0.7431818181818182,
+    "metric": "SQuAD token F1 (exact match also reported)",
+    "model": {
+      "model_id": "Qwen/Qwen3.5-2B",
+      "requested_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+      "resolved_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc"
+    },
+    "model_kind": "sft",
+    "name": "lora-sft",
+    "predictions": "predictions/lora-sft.jsonl",
+    "score": 0.8521432893952854,
+    "shots": 0,
+    "split": "test",
+    "total": 440
+  },
+  "training": {
+    "adapter_dir": "/scratch/project_2021893/shariful/llm-course-2026/week-2/results/my-task/adapter",
+    "assistant_only_loss": true,
+    "backend": "huggingface",
+    "best_eval_loss": 0.09337955713272095,
+    "final_train_loss": 0.08074049906606234,
+    "metrics": "training_metrics.jsonl",
+    "model_id": "Qwen/Qwen3.5-2B",
+    "precision": "bf16",
+    "requested_model_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "resolved_model_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "trainable_parameters": 16819200
+  }
+}

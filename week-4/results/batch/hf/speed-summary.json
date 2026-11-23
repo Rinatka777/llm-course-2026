@@ -1,0 +1,34 @@
+{
+  "backend": "hf",
+  "created_at": "2026-11-23T18:03:03.237271+00:00",
+  "levels": [
+    {
+      "concurrency": 1,
+      "failed": 0,
+      "requests": 16,
+      "seconds": 60.78325343411416,
+      "tokens_per_second": 33.693490958326606,
+      "tpot_ms_p50": 27.941556958166338,
+      "tpot_ms_p95": 28.20916320508947,
+      "ttft_ms_p50": 112.54419211763889,
+      "ttft_ms_p95": 169.8235169169493
+    },
+    {
+      "concurrency": 8,
+      "failed": 0,
+      "requests": 16,
+      "seconds": 13.672371586086228,
+      "tokens_per_second": 149.79113075628808,
+      "tpot_ms_p50": 46.121467531871374,
+      "tpot_ms_p95": 63.66499963099152,
+      "ttft_ms_p50": 488.74646448530257,
+      "ttft_ms_p95": 860.5182939209044
+    }
+  ],
+  "max_tokens": 128,
+  "model": "Qwen/Qwen3.5-2B",
+  "prompts": "configs/benchmark-prompts.txt",
+  "quantization": null,
+  "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "warmup": 3
+}

@@ -1,0 +1,49 @@
+Task: ../week-2/configs/my-task.json   Part: vllm   Results: results/batch
+=== Step 4: vLLM ===
+Starting vLLM; log: /scratch/project_2021893/shariful/llm-course-2026/week-4/.server/vllm.log
+Ready: http://127.0.0.1:8000/v1
+Warm-up: 3 requests (not counted)
+concurrency   1: first token 61 ms, per token 2.9 ms, 302 tokens/s
+concurrency   8: first token 131 ms, per token 3.1 ms, 1950 tokens/s
+Saved to results/batch/vllm/speed-summary.json
+accuracy (exact match) 53.0%, F1 73.4 on 100 examples (0 without a label), 3.3 s
+Saved to results/batch/vllm/eval-summary.json
+Stopped the server (PID 2325477).
+=== Step 5: Compare ===
+### Speed
+
+| Run | Model | Concurrency | First token (ms) | Per token (ms) | Tokens/s (all) |
+|---|---|---:|---:|---:|---:|
+| hf | Qwen/Qwen3.5-2B | 1 | 113 | 27.94 | 34 |
+| hf | Qwen/Qwen3.5-2B | 8 | 489 | 46.12 | 150 |
+| vllm | Qwen/Qwen3.5-2B | 1 | 61 | 2.86 | 302 |
+| vllm | Qwen/Qwen3.5-2B | 8 | 131 | 3.09 | 1950 |
+
+Medians over the requests; every request produced the same number of tokens.
+
+### Evaluation
+
+| Run | Accuracy / EM (%) | F1 | Examples | No label | Time (s) |
+|---|---:|---:|---:|---:|---:|
+| hf | 54.0 | 73.3 | 100 | 0 | 17.2 |
+| vllm | 53.0 | 73.4 | 100 | 0 | 3.3 |
+
+Speed numbers also saved to results/batch/speed.csv
+5 of 100 answers differ. Right only in hf: 1; right only in vllm: 0.
+
+english-3118035794881496621-6  gold=Iran; Oman's Musandam exclave; the United Arab Emirates; Saudi Arabia Qatar, on a peninsula off the Saudi coast; Bahrain, on an island; Kuwait; and Iraq
+  hf         Iran; Oman's Musandam exclave; the United Arab Emirates; Saudi Arabia Qatar, on a peninsula off the Saudi coast; Bahrain, on Answer: Iran; Oman's Musandam exclave; the United Arab Emirates; Saudi Arabia Qa
+  vllm       Iran; Oman's Musandam exclave; the United Arab Emirates; Saudi Arabia; Qatar; Bahrain; Kuwait; and Iraq Answer: Iran; Oman's Musandam exclave; the United Arab Emirates; Saudi Arabia; Q
+english--540626909128855590-0  gold=eastern coast of Central America
+  hf         on the eastern coast of Central America Answer: on the eastern coast of Central America
+  vllm       a country located on the eastern coast of Central America Belize is a country located on the eastern coast of Central America. Answer: a c
+english-3652202307744631086-0  gold=General Robert E. Lee's Confederate Army of Northern Virginia
+  hf         Robert E. Lee  Answer: Robert E. Lee
+  vllm       Robert E. Lee's Confederate Army of Northern Virginia Answer: Robert E. Lee's Confederate Army of Northern Virginia Answer: Robert E. 
+english-3020678782637184448-0  gold=2008
+  hf         2008           Answer: 2008
+  vllm       during the 2008 election The New Black Panther Party voter intimidation case took place during the 2008 e
+english-2378897694411837506-2  gold=Class B fire extinguishers
+  hf         use dry chemicals (foam or powder) such as aqueous film-forming foam, multi-purpose dry chemicals such as ammonium phosphate, and hal Answer: use dry chemicals (foam or powder) such as aqueous film-forming foam, mu
+  vllm       Use a Class B fire extinguisher with dry chemicals such as aqueous film-forming foam, multi-purpose dry chemicals, halogenated agents, or Answer: Use a Class B fire extinguisher with dry chemicals such as aqueous film-
+Done. Results in results/batch

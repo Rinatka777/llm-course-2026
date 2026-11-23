@@ -1,0 +1,40 @@
+Task: ../week-2/configs/my-task.json   Part: hf   Results: results/batch
+=== Step 3: Hugging Face ===
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) csc-tools/default
+---------------------------------------------------------------------------------- 
+PyTorch version 2.13.0, machine learning library for Python.
+
+For more help see: https://docs.csc.fi/apps/pytorch/ 
+---------------------------------------------------------------------------------- 
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  61%|██████    | 194/320 [00:00<00:00, 1924.55it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 2134.53it/s]
+Warm-up: 3 requests (not counted)
+concurrency   1: first token 113 ms, per token 27.9 ms, 34 tokens/s
+concurrency   8: first token 489 ms, per token 46.1 ms, 150 tokens/s
+Saved to results/batch/hf/speed-summary.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 5770.72it/s]
+accuracy (exact match) 54.0%, F1 73.3 on 100 examples (0 without a label), 17.2 s
+Saved to results/batch/hf/eval-summary.json
+=== Step 5: Compare ===
+### Speed
+
+| Run | Model | Concurrency | First token (ms) | Per token (ms) | Tokens/s (all) |
+|---|---|---:|---:|---:|---:|
+| hf | Qwen/Qwen3.5-2B | 1 | 113 | 27.94 | 34 |
+| hf | Qwen/Qwen3.5-2B | 8 | 489 | 46.12 | 150 |
+
+Medians over the requests; every request produced the same number of tokens.
+
+### Evaluation
+
+| Run | Accuracy / EM (%) | F1 | Examples | No label | Time (s) |
+|---|---:|---:|---:|---:|---:|
+| hf | 54.0 | 73.3 | 100 | 0 | 17.2 |
+
+Speed numbers also saved to results/batch/speed.csv
+Run the other part too, then the differences between hf and vllm are shown here.
+Done. Results in results/batch

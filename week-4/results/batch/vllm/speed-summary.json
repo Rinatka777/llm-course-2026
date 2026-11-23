@@ -1,0 +1,34 @@
+{
+  "backend": "vLLM",
+  "created_at": "2026-11-23T18:08:57.039339+00:00",
+  "levels": [
+    {
+      "concurrency": 1,
+      "failed": 0,
+      "requests": 16,
+      "seconds": 6.7876396449282765,
+      "tokens_per_second": 301.724915748918,
+      "tpot_ms_p50": 2.857394220388135,
+      "tpot_ms_p95": 2.869164326418866,
+      "ttft_ms_p50": 61.17890845052898,
+      "ttft_ms_p95": 61.67798675596714
+    },
+    {
+      "concurrency": 8,
+      "failed": 0,
+      "requests": 16,
+      "seconds": 1.05037338915281,
+      "tokens_per_second": 1949.782830705409,
+      "tpot_ms_p50": 3.0869970081638045,
+      "tpot_ms_p95": 3.1053244102357587,
+      "ttft_ms_p50": 131.2468785326928,
+      "ttft_ms_p95": 132.93159805471078
+    }
+  ],
+  "max_tokens": 128,
+  "model": "Qwen/Qwen3.5-2B",
+  "prompts": "configs/benchmark-prompts.txt",
+  "quantization": null,
+  "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "warmup": 3
+}

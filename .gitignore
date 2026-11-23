@@ -29,3 +29,4 @@ checkpoints/
 *.ckpt
 !week-2/data/tydiqa/
 !week-2/data/tydiqa-sample/
+!week-4/example/data/test.jsonl

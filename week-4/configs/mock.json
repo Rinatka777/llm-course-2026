@@ -1,0 +1,7 @@
+{
+  "model": "mock",
+  "revision": "mock-v1",
+  "quantization": null,
+  "adapter": null,
+  "port": 8765
+}
